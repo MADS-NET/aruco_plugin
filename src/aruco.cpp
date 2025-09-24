@@ -124,7 +124,9 @@ public:
     acquireFrames();
     detectMarkers();
     estimatePose();
-    display();
+    if (_params["display"].get<bool>()) {
+      display();
+    }
 
     // load the data as necessary and set the fields of the json out variable
 
@@ -146,7 +148,7 @@ public:
 
     // provide sensible defaults for the parameters by setting e.g.
     _params["some_field"] = "default_value";
-    // more here...
+    _params["display"] = false;
 
     // then merge the defaults with the actually provided parameters
     // params needs to be cast to json
@@ -163,7 +165,7 @@ public:
     // it is used to print the information about the plugin when it is loaded
     // by the agent
     
-    return {};
+    return {{"display", (_params["display"].get<bool>() ? "ON" : "OFF")}};
     
   };
 
