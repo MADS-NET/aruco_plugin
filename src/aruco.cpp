@@ -75,7 +75,6 @@ public:
 
   // ***************************************************************************
   void estimate_pose(json &out) {
-    _arucos_data.clear();
     if (_ids.empty())
       return;
     rs2::video_stream_profile color_profile =
@@ -93,7 +92,7 @@ public:
       std::cout << "ID: " << _ids[i]
                 << " 3D Coordinates (meters): X=" << point[0]
                 << " Y=" << point[1] << " Z=" << point[2] << std::endl;
-      out["tag." + to_string(ids[i])]["position"] = {point[0], point[1], point[2]};
+      out["tag." + to_string(_ids[i])]["position"] = {point[0], point[1], point[2]};
     }
   }
 
