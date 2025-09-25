@@ -55,11 +55,9 @@ public:
 
   // ***************************************************************************
   void acquire_frames() {
-    _frames = std::make_unique<rs2::frameset>(_pipe.wait_for_frames());
-    _color_frame =
-        std::make_unique<rs2::video_frame>(_frames->get_color_frame());
-    _depth_frame =
-        std::make_unique<rs2::depth_frame>(_frames->get_depth_frame());
+    _frames = make_unique<rs2::frameset>(_pipe.wait_for_frames());
+    _color_frame = make_unique<rs2::video_frame>(_frames->get_color_frame());
+    _depth_frame = make_unique<rs2::depth_frame>(_frames->get_depth_frame());
 
     _color_img = cv::Mat(cv::Size(640, 480), CV_8UC3,
                          (void *)_color_frame->get_data(), cv::Mat::AUTO_STEP);
@@ -80,19 +78,21 @@ public:
     rs2::video_stream_profile color_profile =
         _color_frame->get_profile().as<rs2::video_stream_profile>();
     rs2_intrinsics intrinsics = color_profile.get_intrinsics();
+    cv::Point2f center(0, 0);
     for (size_t i = 0; i < _ids.size(); ++i) {
-      cv::Point2f center(0, 0);
-      for (int j = 0; j < 4; ++j)
+      center = {0, 0};
+      for (int j = 0; j < 4; ++j) {
         center += _corners[i][j];
+      }
       center *= 0.25f; // Calculate center of quadrilateral
       float pixel[2] = {center.x, center.y};
       float depth = _depth_frame->get_distance((int)center.x, (int)center.y);
       float point[3];
       rs2_deproject_pixel_to_point(point, &intrinsics, pixel, depth);
-      std::cout << "ID: " << _ids[i]
-                << " 3D Coordinates (meters): X=" << point[0]
-                << " Y=" << point[1] << " Z=" << point[2] << std::endl;
-      out["tag." + to_string(_ids[i])]["position"] = {point[0], point[1], point[2]};
+      cout << "ID: " << _ids[i] << " 3D Coordinates (meters): X=" << point[0]
+           << " Y=" << point[1] << " Z=" << point[2] << endl;
+      out["tag." + to_string(_ids[i])]["position"] = {point[0], point[1],
+                                                      point[2]};
     }
   }
 
@@ -102,19 +102,19 @@ public:
       cv::imshow("RGB", _color_img);
       cv::waitKey(1);
     } else {
-      std::cerr << "color_img is empty!" << std::endl;
+      cerr << "color_img is empty!" << endl;
     }
   }
 
   // Implement the actual functionality here
   return_type get_output(json &out,
-                         std::vector<unsigned char> *blob = nullptr) override {
+                         vector<unsigned char> *blob = nullptr) override {
     out.clear();
 
     acquire_frames();
     detect_markers();
     estimate_pose(out);
-    if (_params["display"].get<bool>()) {
+    if (_params.value("display", false)) {
       display();
     }
     return return_type::success;
@@ -143,7 +143,7 @@ public:
     // it is used to print the information about the plugin when it is loaded
     // by the agent
 
-    return {{"display", (_params["display"].get<bool>() ? "ON" : "OFF")}};
+    return {{"Display", (_params.value("display", false) ? "ON" : "OFF")}};
   };
 
 private:
@@ -151,11 +151,11 @@ private:
   rs2::config _cfg;
   cv::Mat _color_img;
   cv::Ptr<cv::aruco::Dictionary> _dictionary;
-  std::vector<int> _ids;
-  std::vector<std::vector<cv::Point2f>> _corners;
-  std::unique_ptr<rs2::frameset> _frames;
-  std::unique_ptr<rs2::video_frame> _color_frame;
-  std::unique_ptr<rs2::depth_frame> _depth_frame;
+  vector<int> _ids;
+  vector<vector<cv::Point2f>> _corners;
+  unique_ptr<rs2::frameset> _frames;
+  unique_ptr<rs2::video_frame> _color_frame;
+  unique_ptr<rs2::depth_frame> _depth_frame;
 };
 
 /*
@@ -192,8 +192,8 @@ int main(int argc, char const *argv[]) {
 
   while (1) {
     plugin.get_output(output);
-    // std::this_thread::sleep_for(std::chrono::milliseconds(400));
-    // std::cout << "aaaaaa" << std::endl;
+    // this_thread::sleep_for(chrono::milliseconds(400));
+    // cout << "aaaaaa" << endl;
   }
 
   // Produce output

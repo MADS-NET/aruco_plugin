@@ -41,16 +41,12 @@ The plugin supports the following settings in the INI file:
 
 ```ini
 [aruco]
-# Describe the settings available to the plugin
+display = false # shows video stream (requires a GUI)
 ```
 
 All settings are optional; if omitted, the default values are used.
 
 
 
-
-## Executable demo
-
-<Explain what happens if the test executable is run>
 
 ---
